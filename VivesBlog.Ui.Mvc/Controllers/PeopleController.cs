@@ -1,24 +1,23 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using VivesBlog.Model;
-using VivesBlog.Services;
+﻿using Microsoft.AspNetCore.Mvc;
+using VivesBlog.Dto.Requests;
+using VivesBlog.Dto.Results;
+using VivesBlog.Sdk;
 
 namespace VivesBlog.Ui.Mvc.Controllers
 {
-    [Authorize]
     public class PeopleController : Controller
     {
-        private readonly PersonService _personService;
+        private readonly PersonSdk _personSdk;
 
-        public PeopleController(PersonService personService)
+        public PeopleController(PersonSdk personSdk)
         {
-            _personService = personService;
+            _personSdk = personSdk;
         }
 
         [HttpGet]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var people = _personService.Find();
+            var people = await _personSdk.Find();
 
             return View(people);
         }
@@ -31,49 +30,66 @@ namespace VivesBlog.Ui.Mvc.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(Person person)
+        public async Task<IActionResult> Create(PersonRequest request)
         {
             if (!ModelState.IsValid)
             {
+                var person = new PersonResult
+                {
+                    FirstName = request.FirstName,
+                    LastName = request.LastName,
+                    Email = request.Email
+                };
                 return View(person);
             }
 
-            _personService.Create(person);
+            await _personSdk.Create(request);
 
             return RedirectToAction("Index");
         }
 
         [HttpGet]
-        public IActionResult Edit([FromRoute]int id)
+        public async Task<IActionResult> Edit([FromRoute]int id)
         {
-            var person = _personService.Get(id);
+            var result = await _personSdk.Get(id);
 
-            if (person is null)
+            if (!result.IsSuccess || result.Data is null)
             {
                 return RedirectToAction("Index");
             }
-            
-            return View(person);
+
+            return View(result.Data);
         }
 
         [HttpPost, ValidateAntiForgeryToken]
-        public IActionResult Edit([FromRoute]int id, [FromForm]Person person)
+        public async Task<IActionResult> Edit([FromRoute]int id, [FromForm]PersonRequest request)
         {
             if (!ModelState.IsValid)
             {
+                var result = await _personSdk.Get(id);
+                if (!result.IsSuccess || result.Data is null)
+                {
+                    return RedirectToAction("Index");
+                }
+
+                var person = result.Data;
+                person.FirstName = request.FirstName;
+                person.LastName = request.LastName;
+                person.Email = request.Email;
+
                 return View(person);
             }
 
-            _personService.Update(id, person);
+            await _personSdk.Update(id, request);
 
             return RedirectToAction("Index");
         }
 
 
         [HttpPost("/[controller]/Delete/{id:int?}"), ValidateAntiForgeryToken]
-        public IActionResult DeleteConfirmed(int id)
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            _personService.Delete(id);
+            await _personSdk.Delete(id);
 
             return RedirectToAction("Index");
         }

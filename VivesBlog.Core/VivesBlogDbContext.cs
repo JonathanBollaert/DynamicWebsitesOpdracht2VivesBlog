@@ -12,18 +12,6 @@ namespace VivesBlog.Core
 
         public void Seed()
         {
-            var userEmail = "test@user.be";
-            var testUser = new IdentityUser()
-            {
-                UserName = userEmail,
-                NormalizedUserName = userEmail.ToUpper(),
-                Email = userEmail,
-                NormalizedEmail = userEmail.ToUpper(),
-                PasswordHash = "AQAAAAIAAYagAAAAEFD8je85ksLFl+cBf3fcROhlhqQwdRpJGraHmc5y11ypnMuy5OHsggYKWg2LtgeJtg==" //Test123$
-            };
-            Users.Add(testUser);
-
-
             var people = new List<Person>
             {
                 new Person { FirstName = "John", LastName = "Doe", Email = "john.doe@example.com" },
